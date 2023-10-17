@@ -81,7 +81,7 @@ client.on(Events.InteractionCreate, async interaction => {
 let check = setInterval(async () => {
     let [n1, n2, xg] = await query.getKW();
     let nowStatus = Number(Math.max(n1, n2, xg) >= 6500) + Number(Math.max(n1, n2, xg) >= 6750);
-    let power = `北區一號（契約容量：5200 kW）:${n1} kW\n北區二號（契約容量：5600 kW）: ${n2} kW\n仙宮一號（契約容量：1500 kW）：${xg} kW`
+    let power = `北區一號：${n1}/5200 kW\n北區二號：${n2}/5600 kW\n仙宮一號：${xg}/1500 kW`
     console.log(query.status, nowStatus)
     if (query.status != nowStatus) {
         const servers = require('../server.json');
