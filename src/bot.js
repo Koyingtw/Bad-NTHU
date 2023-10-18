@@ -51,9 +51,14 @@ const rest = new REST().setToken(process.env.TOKEN);
 	}
 })();
 
+let status = 0; // 0: normal, 1: warning, 2: danger
 
-client.once(Events.ClientReady, c => {
+client.once(Events.ClientReady, async c => {
 	console.log(`Ready! Logged in as ${c.user.tag}`);
+    await query.getKW().then(ret => {
+        let [n1, n2, xg] = ret;
+        status = Number(Math.max(n1, n2, xg) >= 6500) + Number(Math.max(n1, n2, xg) >= 6750);
+    })
 });
 
 client.on(Events.InteractionCreate, async interaction => {
@@ -82,30 +87,30 @@ let check = setInterval(async () => {
     let [n1, n2, xg] = await query.getKW();
     let nowStatus = Number(Math.max(n1, n2, xg) >= 6500) + Number(Math.max(n1, n2, xg) >= 6750);
     let power = `北區一號：${n1}/5200 kW\n北區二號：${n2}/5600 kW\n仙宮一號：${xg}/1500 kW`
-    console.log(query.status, nowStatus)
-    if (query.status != nowStatus) {
+    console.log(status, nowStatus)
+    if (status != nowStatus) {
         const servers = require('../server.json');
         for (const server of servers) {
             if (nowStatus == 0) {
-                if (server.role.length > 1)
-                    alert.send(client, server.channel, `<@&${server.role}> 爛清大電站發電量恢復正常，目前發電量為\n${power}`);
-                else
-                    alert.send(client, server.channel, `爛清大電站發電量恢復正常，目前發電量為\n${power}`);
+                alert.send(client, server.channel, `爛清大電站用電量恢復正常，目前用電量為\n${power}`);
             }   
-            else if (nowStatus == 1 && query.status == 0) {
+            else if (nowStatus == 1 && status == 0) {
                 if (server.role.length > 1)
-                    alert.send(client, server.channel, `<@&${server.role}> 爛清大電站發電量過高，目前發電量為\n${power}`);
+                    alert.send(client, server.channel, `<@&${server.role}> 爛清大電站用電量過高，目前用電量為\n${power}`);
                 else
-                    alert.send(client, server.channel, `爛清大電站發電量過高，目前發電量為\n${power}`);
+                    alert.send(client, server.channel, `爛清大電站用電量過高，目前發電量為\n${power}`);
             }
-            else {
+            else if (nowStatus == 1 && status == 2) {
+                alert.send(client, server.channel, `爛清大電站用電量降回一般警戒，大家可以繼續用電腦了，目前用電量為\n${power}`);
+            }
+            else if (nowStatus == 2) {
                 if (server.role.length > 1)
-                    alert.send(client, server.channel, `<@&${server.role}> 爛清大快要停電了！目前發電量為\n${power}\n，趕緊關電器！`);
+                    alert.send(client, server.channel, `<@&${server.role}> 爛清大快要停電了！目前用電量為\n${power}\n趕緊關電器！`);
                 else
-                    alert.send(client, server.channel, `爛清大快要停電了！目前發電量為\n${power}\n，趕緊關電器`)
+                    alert.send(client, server.channel, `爛清大快要停電了！目前用電量為\n${power}\n趕緊關電器`)
             }
         }
-        query.status = nowStatus;
+        status = nowStatus;
     }
 }, 60000);
 

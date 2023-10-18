@@ -3,6 +3,13 @@ const axios = require('axios');
 
 let status = 0; // 0: normal, 1: warning, 2: danger
 
+async function init() {
+	let [n1, n2, xg] = await getKW();
+	let nowStatus = Number(Math.max(n1, n2, xg) >= 6500) + Number(Math.max(n1, n2, xg) >= 6750);
+	status = nowStatus;
+	console.log("Now Status: ", status);
+}
+
 async function getKW() {
 	let urls = ['http://140.114.188.57/nthu2020/fn1/kw1.aspx', 'http://140.114.188.57/nthu2020/fn1/kw2.aspx', 'http://140.114.188.57/nthu2020/fn1/kw3.aspx']
 	let ret = [];
@@ -32,6 +39,7 @@ async function getKW() {
 
 module.exports = {
 	status: status,
+	init: init,
 	getKW: getKW,
 	data: new SlashCommandBuilder()
 		.setName('query')
